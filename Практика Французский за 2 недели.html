@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pratique du Français | Полный курс (10 уроков)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --fr-blue: #002395; --fr-red: #ED2939; --bg-cream: #FAFAFA; --text-main: #2C3E50;
+            --text-muted: #6B7280; --card-bg: #FFFFFF; --success: #27AE60; --error: #C0392B;
+            --gold: #D4AF37; --shadow: 0 12px 40px rgba(0,0,0,0.08);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
+        body { font-family: 'Montserrat', sans-serif; background: var(--bg-cream); color: var(--text-main); min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 30px 15px; }
+
+        .app-wrapper { width: 100%; max-width: 740px; background: var(--card-bg); border-radius: 20px; box-shadow: var(--shadow); overflow: hidden; }
+        .fr-accent { height: 5px; width: 100%; background: linear-gradient(to right, var(--fr-blue) 33.3%, #FFFFFF 33.3%, #FFFFFF 66.6%, var(--fr-red) 66.6%); }
+
+        .nav-bar { display: flex; gap: 8px; padding: 15px; background: #F8F9FA; border-bottom: 1px solid #EAEAEA; overflow-x: auto; }
+        .nav-btn { padding: 8px 14px; border: 1.5px solid #D1D5DB; background: #fff; border-radius: 20px; cursor: pointer; font-family: 'Montserrat', sans-serif; font-size: 0.85rem; font-weight: 500; white-space: nowrap; transition: all 0.2s; }
+        .nav-btn:hover { background: #EDF2F7; }
+        .nav-btn.active { background: var(--fr-blue); color: #fff; border-color: var(--fr-blue); }
+        .nav-btn.completed { background: #E6F9ED; border-color: var(--success); color: var(--text-main); }
+
+        .app-header { padding: 20px 25px 15px; text-align: center; border-bottom: 1px solid #EAEAEA; }
+        .app-header h1 { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 600; color: var(--fr-blue); margin-bottom: 4px; }
+        .app-header p { color: var(--text-muted); font-size: 0.85rem; }
+
+        .main-content { padding: 25px; }
+        .progress-wrap { margin-bottom: 20px; }
+        .progress-track { height: 6px; background: #E5E7EB; border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--fr-blue); width: 0%; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .progress-label { text-align: right; font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; font-weight: 500; }
+
+        .q-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 20px; }
+        .task-question { font-size: 1.05rem; font-weight: 500; line-height: 1.5; flex: 1; }
+        .speak-btn { background: #E2E8F0; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
+        .speak-btn:hover { background: #CBD5E1; transform: scale(1.05); }
+        .speak-btn:active { transform: scale(0.95); }
+        .speak-btn svg { width: 20px; height: 20px; fill: var(--fr-blue); }
+
+        .task-label { font-family: 'Cormorant Garamond', serif; font-style: italic; color: var(--gold); font-size: 0.9rem; margin-bottom: 10px; display: block; text-transform: uppercase; letter-spacing: 1px; }
+        .opt-grid { display: grid; gap: 10px; }
+        .opt-btn { background: #F8F9FA; border: 1.5px solid #E9ECEF; padding: 14px; border-radius: 10px; text-align: left; cursor: pointer; transition: all 0.2s; font-family: 'Montserrat', sans-serif; font-size: 0.9rem; color: var(--text-main); }
+        .opt-btn:hover:not(.locked) { background: #EDF2F7; transform: translateY(-1px); }
+        .opt-btn.selected { background: #EBF5FB; border-color: #3182CE; color: #2B6CB0; font-weight: 500; }
+        .opt-btn.correct { background: #E6F9ED; border-color: var(--success); color: var(--success); }
+        .opt-btn.incorrect { background: #FEE2E2; border-color: var(--error); color: var(--error); }
+        .opt-btn.locked { pointer-events: none; opacity: 0.7; }
+
+        .word-area { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; min-height: 46px; align-items: center; background: #F1F5F9; padding: 12px; border-radius: 10px; border: 2px dashed #CBD5E0; }
+        .word-area.empty { background: #FAFAFA; }
+        .word-pool { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 8px; }
+        .word-tile { background: #fff; padding: 8px 14px; border-radius: 8px; cursor: pointer; border: 1px solid #E5E7EB; box-shadow: 0 2px 4px rgba(0,0,0,0.05); user-select: none; transition: transform 0.15s; font-size: 0.9rem; }
+        .word-tile:hover { transform: translateY(-2px); }
+        .word-tile.placed { opacity: 0.3; pointer-events: none; background: #F3F4F6; }
+        .word-area .word-tile { background: #EBF5FB; border-color: #3182CE; }
+
+        .fill-field { width: 100%; padding: 13px; font-size: 0.95rem; border: 1.5px solid #D1D5DB; border-radius: 10px; margin-bottom: 22px; transition: all 0.2s; }
+        .fill-field:focus { border-color: var(--fr-blue); box-shadow: 0 0 0 3px rgba(0,35,149,0.1); }
+        .fill-field.is-correct { border-color: var(--success); background: #F0FDF4; }
+        .fill-field.is-wrong { border-color: var(--error); background: #FEF2F2; }
+        .fill-field.locked { pointer-events: none; background: #F3F4F6; color: #4B5563; opacity: 0.9; }
+        .context-line { font-size: 0.95rem; margin-bottom: 12px; color: var(--text-muted); }
+
+        .feedback-msg { margin-top: 12px; padding: 12px; border-radius: 10px; font-size: 0.85rem; display: none; line-height: 1.4; }
+        .feedback-msg.success { background: #E6F9ED; color: #0F7A45; border: 1px solid #A7F3D0; }
+        .feedback-msg.error { background: #FEE2E2; color: #922B21; border: 1px solid #FECACA; }
+
+        .ctrl-row { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
+        .btn { padding: 11px 22px; border-radius: 50px; border: none; font-weight: 500; cursor: pointer; transition: all 0.2s; font-family: 'Montserrat', sans-serif; font-size: 0.85rem; }
+        .btn-pri { background: var(--fr-blue); color: #fff; }
+        .btn-pri:hover { background: #001B7A; transform: translateY(-1px); }
+        .btn-pri:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-sec { background: transparent; border: 1.5px solid #D1D5DB; color: var(--text-muted); }
+        .btn-sec:hover { background: #F8F9FA; }
+
+        .progress-controls { display: flex; justify-content: center; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #EAEAEA; }
+        .btn-sm { padding: 6px 14px; font-size: 0.75rem; border-radius: 20px; }
+        .btn-danger { background: var(--error); color: #fff; }
+        .btn-danger:hover { background: #A93226; }
+
+        .res-screen { text-align: center; padding: 40px 20px; display: none; }
+        .res-screen h2 { font-family: 'Cormorant Garamond', serif; font-size: 2rem; margin-bottom: 8px; color: var(--fr-blue); }
+        .res-screen p { color: var(--text-muted); margin-bottom: 25px; }
+        .score-ring { width: 120px; height: 120px; border-radius: 50%; background: #F8FAFC; border: 5px solid var(--fr-blue); display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 600; margin: 0 auto 30px; box-shadow: 0 8px 20px rgba(0,35,149,0.15); }
+
+        @media (max-width: 600px) {
+            .main-content { padding: 20px 15px; }
+            .app-header { padding: 15px; }
+            .ctrl-row { flex-direction: column-reverse; }
+            .btn { width: 100%; }
+            .nav-bar { padding: 10px; gap: 6px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-wrapper">
+    <div class="fr-accent"></div>
+    <nav class="nav-bar" id="lesson-nav"></nav>
+    <header class="app-header">
+        <h1 id="app-title">Выберите урок</h1>
+        <p id="app-subtitle">Полный курс: Аэропорт → Отъезд</p>
+    </header>
+
+    <main class="main-content" id="game-view">
+        <div class="progress-wrap">
+            <div class="progress-track"><div class="progress-fill" id="prog-bar"></div></div>
+            <div class="progress-label" id="prog-txt">0 / 0</div>
+        </div>
+        <span class="task-label" id="task-type-label">Загрузка...</span>
+        <div class="q-row">
+            <div class="task-question" id="task-q"></div>
+            <button class="speak-btn" id="speak-btn" title="Прослушать фразу" onclick="app.speak()">
+                <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            </button>
+        </div>
+        <div id="task-interact"></div>
+        <div class="feedback-msg" id="fb-msg"></div>
+        <div class="ctrl-row">
+            <button class="btn btn-sec" id="prev-btn" onclick="app.goPrev()" disabled>← Назад</button>
+            <button class="btn btn-pri" id="check-btn" onclick="app.validate()">Проверить</button>
+            <button class="btn btn-pri" id="next-btn" onclick="app.goNext()" style="display:none;">Далее →</button>
+        </div>
+        <div class="progress-controls">
+            <button class="btn btn-sec btn-sm" onclick="app.clearProgress()">🗑️ Сбросить прогресс</button>
+        </div>
+    </main>
+
+    <div class="res-screen" id="res-view">
+        <h2>Bravo ! 🇫🇷✨</h2>
+        <p id="res-text">Вы завершили практику.</p>
+        <div class="score-ring" id="res-score">0/0</div>
+        <button class="btn btn-pri" onclick="app.resetCurrent()">Пройти заново</button>
+    </div>
+</div>
+
+<script>
+const LESSONS = {
+    1: { title: "Урок 1: В аэропорту", subtitle: "À l'aéroport", exercises: [
+        { type: 'test', q: 'Как переводится «Quel est le but de votre voyage?»', speak: "Quel est le but de votre voyage?", opts: ["Какова цель вашей поездки?", "Как долго вы пробудете здесь?", "Где вы остановитесь?", "Дайте ваш паспорт"], correct: "Какова цель вашей поездки?" },
+        { type: 'word_order', q: 'Соберите фразу: «Дайте, пожалуйста, ваш паспорт»', speak: "Donnez-moi votre passeport, s'il vous plaît.", words: ["Donnez-moi", "votre", "passeport,", "s'il", "vous", "plaît."], correct: "Donnez-moi votre passeport, s'il vous plaît." },
+        { type: 'fill', q: 'Вставьте пропущенное слово (декларировать)', speak: "Avez-vous quelque chose à déclarer?", context: "Avez-vous quelque chose à ___ ?", correct: "déclarer" },
+        { type: 'test', q: 'Что означает «Tout est en ordre»?', speak: "Tout est en ordre.", opts: ["Всё в порядке", "Это очень мило", "Следуйте за мной", "Зал ожидания"], correct: "Всё в порядке" },
+        { type: 'word_order', q: 'Соберите фразу: «Я приглашена в качестве гостя»', speak: "Je suis invitée en qualité d'hôte.", words: ["Je", "suis", "invitée", "en", "qualité", "d'hôte."], correct: "Je suis invitée en qualité d'hôte." },
+        { type: 'fill', q: 'Вставьте пропущенное слово (таможенная)', speak: "La zone douanière.", context: "La zone ___ ", correct: "douanière" },
+        { type: 'test', q: 'Как по-французски «Где вы остановитесь?»', speak: "Où allez-vous descendre?", opts: ["Où allez-vous descendre?", "Où est la gare?", "Combien de temps?", "Avez-vous un billet?"], correct: "Où allez-vous descendre?" },
+        { type: 'word_order', q: 'Соберите фразу: «Извините, что заставляю Вас ждать»', speak: "Excusez-moi pour vous faire attendre.", words: ["Excusez-moi", "pour", "vous", "faire", "attendre."], correct: "Excusez-moi pour vous faire attendre." },
+        { type: 'fill', q: 'Вставьте пропущенное слово (багаж)', speak: "Je dois recevoir mes bagages.", context: "Je dois recevoir mes ___ .", correct: "bagages" },
+        { type: 'test', q: 'Что означает «la salle d’attente»?', speak: "La salle d'attente.", opts: ["Зал ожидания", "Иммиграционный пункт", "Таможенная зона", "Регистрация багажа"], correct: "Зал ожидания" },
+        // Новые аудио-задания
+        { type: 'listening', q: 'Прослушайте и выберите перевод', speak: "Donnez-moi votre passeport, s'il vous plaît.", opts: ["Дайте ваш паспорт, пожалуйста", "Покажите ваш билет", "Где ваш багаж?", "Ваша виза готова?"], correct: "Дайте ваш паспорт, пожалуйста" },
+        { type: 'listening_fill', q: 'Прослушайте и вставьте пропущенное слово', speak: "Je suis invitée en qualité d'hôte.", context: "Je suis ___ en qualité d'hôte.", correct: "invitée" }
+    ]},
+    2: { title: "Урок 2: Знакомство", subtitle: "Faire connaissance", exercises: [
+        { type: 'test', q: 'Как переводится «Je suis ravi(e) de faire votre connaissance»?', speak: "Je suis ravi de faire votre connaissance.", opts: ["Приятно с Вами познакомиться", "Я очень рад Вас видеть", "Добро пожаловать", "До свидания"], correct: "Приятно с Вами познакомиться" },
+        { type: 'word_order', q: 'Соберите фразу: «Я Вам представляю мою жену»', speak: "Je vous présente ma femme Paula.", words: ["Je", "vous", "présente", "ma", "femme", "Paula."], correct: "Je vous présente ma femme Paula." },
+        { type: 'fill', q: 'Вставьте пропущенное слово (студент)', speak: "Il est étudiant.", context: "Le garçon, Mark, a dix-neuf ans. Il est ___ .", correct: "étudiant" },
+        { type: 'test', q: 'Что означает «Sans doute»?', speak: "Sans doute.", opts: ["Без сомнений", "Возможно", "Наверное", "Точно нет"], correct: "Без сомнений" },
+        { type: 'word_order', q: 'Соберите фразу: «Мне тоже приятно»', speak: "Moi aussi, j'en suis ravi(e).", words: ["Moi", "aussi,", "j'en", "suis", "ravi(e)."], correct: "Moi aussi, j'en suis ravi(e)." },
+        { type: 'fill', q: 'Вставьте пропущенное слово (полагаться на)', speak: "Je peux toujours compter sur vous.", context: "Je peux toujours ___ vous.", correct: "compter sur" },
+        { type: 'test', q: 'Как по-французски «Это было бы замечательной идеей!»', speak: "Ce serait une excellente idée!", opts: ["Ce serait une excellente idée!", "C'est une bonne idée", "Je pense que c'est bien", "Quelle idée!"], correct: "Ce serait une excellente idée!" },
+        { type: 'word_order', q: 'Соберите фразу: «С огромным удовольствием»', speak: "Avec un grand plaisir.", words: ["Avec", "un", "grand", "plaisir."], correct: "Avec un grand plaisir." },
+        { type: 'fill', q: 'Вставьте пропущенное слово (провести время)', speak: "Nous allons passer un temps merveilleux ensemble.", context: "Nous allons ___ un temps merveilleux ensemble.", correct: "passer" },
+        { type: 'test', q: 'Что означает «distraction» в контексте планов?', speak: "Distraction.", opts: ["развлечения", "отвлечение внимания", "скука", "работа"], correct: "развлечения" },
+        { type: 'listening', q: 'Прослушайте и выберите перевод', speak: "Ce serait une excellente idée!", opts: ["Это была бы отличная идея!", "Это хорошая мысль", "Мне это нравится", "Я согласен"], correct: "Это была бы отличная идея!" },
+        { type: 'listening_fill', q: 'Прослушайте и вставьте пропущенное слово', speak: "Je vous présente ma femme Paula.", context: "Je vous présente ma ___ Paula.", correct: "femme" }
+    ]},
+    3: { title: "Урок 3: В отеле", subtitle: "À l'hôtel", exercises: [
+        { type: 'test', q: 'Как переводится «Je préférerais casser la croûte dans la chambre»?', speak: "Je préférerais casser la croûte dans la chambre.", opts: ["Я бы предпочёл перекусить в номере", "Я хочу поужинать в ресторане", "Пришлите счёт, пожалуйста", "Мне нужно заказать кофе"], correct: "Я бы предпочёл перекусить в номере" },
+        { type: 'word_order', q: 'Соберите фразу: «Распишитесь в регистрационной книге»', speak: "Signez dans le sommier, s'il vous plaît.", words: ["Signez", "dans", "le", "sommier,", "s'il", "vous", "plaît."], correct: "Signez dans le sommier, s'il vous plaît." },
+        { type: 'fill', q: 'Вставьте пропущенное слово (забронировать)', speak: "Je voudrais réserver une chambre à un lit.", context: "Je voudrais ___ une chambre à un lit.", correct: "réserver" },
+        { type: 'test', q: 'Что означает выражение «casser la croûte»?', speak: "Casser la croûte.", opts: ["перекусить", "сломать корку хлеба", "заказывать еду", "оплачивать счёт"], correct: "перекусить" },
+        { type: 'word_order', q: 'Соберите фразу: «Где находится номер?»', speak: "Où se trouve la chambre ?", words: ["Où", "se", "trouve", "la", "chambre", "?"], correct: "Où se trouve la chambre ?" },
+        { type: 'fill', q: 'Вставьте пропущенное слово (этаж)', speak: "Au cinquième étage.", context: "Au cinquième ___ .", correct: "étage" },
+        { type: 'test', q: 'Как звучит фраза «Увидимся позже»?', speak: "On se voit plus tard.", opts: ["On se voit plus tard", "Je reviens à 17 heures", "Au cinquième étage", "D'accord, merci"], correct: "On se voit plus tard" },
+        { type: 'word_order', q: 'Соберите фразу: «Я бы хотела, чтобы отнесли чемодан»', speak: "Je voudrais faire porter ma valise.", words: ["Je", "voudrais", "faire", "porter", "ma", "valise."], correct: "Je voudrais faire porter ma valise." },
+        { type: 'fill', q: 'Вставьте пропущенное слово (носильщик)', speak: "Monsieur le porteur.", context: "Monsieur le ___, portez la valise...", correct: "porteur" },
+        { type: 'test', q: 'Что означает глагол «s’installer» при заселении?', speak: "S'installer.", opts: ["располагаться / устраиваться", "оформлять бронь", "покидать номер", "вызывать такси"], correct: "располагаться / устраиваться" },
+        { type: 'listening', q: 'Прослушайте и выберите перевод', speak: "Je voudrais réserver une chambre à un lit.", opts: ["Я бы хотел забронировать одноместный номер", "Мне нужен номер на двоих", "Сколько стоит номер?", "У вас есть свободные номера?"], correct: "Я бы хотел забронировать одноместный номер" },
+        { type: 'listening_fill', q: 'Прослушайте и вставьте пропущенное слово', speak: "Au cinquième étage.", context: "Au cinquième ___.", correct: "étage" }
+    ]},
+    4: { title: "Урок 4: В ресторане", subtitle: "Au restaurant", exercises: [
+        { type: 'test', q: 'Как переводится «J’ai une réservation pour trois»?', speak: "J'ai une réservation pour trois.", opts: ["У меня бронь на троих", "Я жду трёх гостей", "Стол на троих готов", "Закажите три блюда"], correct: "У меня бронь на троих" },
+        { type: 'word_order', q: 'Соберите фразу: «Вот ваш столик. Вам подходит?»', speak: "Voilà votre table. Elle vous convient?", words: ["Voilà", "votre", "table.", "Elle", "vous", "convient?"], correct: "Voilà votre table. Elle vous convient?" },
+        { type: 'fill', q: 'Вставьте пропущенное слово (пить/выпить)', speak: "Désirez-vous quelque chose à boire ?", context: "Désirez-vous quelque chose à ___ ?", correct: "boire" },
+        { type: 'test', q: 'Что означает «Que préféreriez-vous comme garniture?»?', speak: "Que préféreriez-vous comme garniture?", opts: ["Что предпочтёте на гарнир?", "Какое вино вы хотите?", "Сколько порций заказать?", "Какой суп вы выберете?"], correct: "Что предпочтёте на гарнир?" },
+        { type: 'word_order', q: 'Соберите фразу: «Принесите счёт, пожалуйста»', speak: "Apportez l'addition, s'il vous plaît.", words: ["Apportez", "l'addition,", "s'il", "vous", "plaît."], correct: "Apportez l'addition, s'il vous plaît." },
+        { type: 'fill', q: 'Вставьте пропущенное слово (пожелаете)', speak: "Comme vous voulez.", context: "Comme vous ___ .", correct: "voulez" },
+        { type: 'test', q: 'Как переводится «Un pourboire»?', speak: "Un pourboire.", opts: ["чаевые", "счёт", "бронь", "налог"], correct: "чаевые" },
+        { type: 'word_order', q: 'Соберите фразу: «Мы бы хотели цыплёнка с овощами»', speak: "Nous voudrions un poulet avec des légumes.", words: ["Nous", "voudrions", "un", "poulet", "avec", "des", "légumes."], correct: "Nous voudrions un poulet avec des légumes." },
+        { type: 'fill', q: 'Вставьте пропущенное слово (Приятного аппетита)', speak: "Bon appétit!", context: "Bon ___ !", correct: "appétit" },
+        { type: 'test', q: 'Что означает «payer en argent comptant»?', speak: "Payer en argent comptant.", opts: ["платить наличными", "оплатить картой", "платить частями", "оплатить позже"], correct: "платить наличными" },
+        { type: 'listening', q: 'Прослушайте и выберите перевод', speak: "Apportez l'addition, s'il vous plaît.", opts: ["Принесите счёт, пожалуйста", "Покажите меню", "Я хочу заказать десерт", "Сколько я должен?"], correct: "Принесите счёт, пожалуйста" },
+        { type: 'listening_fill', q: 'Прослушайте и вставьте пропущенное слово', speak: "Bon appétit!", context: "Bon ___ !", correct: "appétit" }
+    ]},
+    5: { title: "Урок 5: Достопримечательности", subtitle: "Les curiosités", exercises: [
+        { type: 'test', q: 'Как переводится «Nous pourrions visiter toutes les grandes curiosités»?', speak: "Nous pourrions visiter toutes les grandes curiosités.", opts: ["Мы могли бы посмотреть главные достопримечательности", "Мы купим все сувениры", "Мы пойдём в парк", "Мы сделаем красивые фото"], correct: "Мы могли бы посмотреть главные достопримечательности" },
+        { type: 'word_order', q: 'Соберите фразу: «Какие у вас планы на сегодня?»', speak: "Vous avez des plans pour aujourd'hui?", words: ["Vous", "avez", "des", "plans", "pour", "aujourd'hui?"], correct: "Vous avez des plans pour aujourd'hui?" },
+        { type: 'fill', q: 'Вставьте пропущенное слово (восхитительно)', speak: "C'est à ravir!", context: "C'est à ___ !", correct: "ravir" },
+        { type: 'test', q: 'Что означает «À propos, j’ai beaucoup entendu parler du Louvre»?', speak: "À propos, j'ai beaucoup entendu parler du Louvre.", opts: ["Кстати, я много слышал(а) о Лувре", "Наконец, мы едем в Лувр", "Лувр закрыт сегодня", "Я люблю искусство"], correct: "Кстати, я много слышал(а) о Лувре" },
+        { type: 'word_order', q: 'Соберите фразу: «Что это за река?»', speak: "Quelle est cette rivière?", words: ["Quelle", "est", "cette", "rivière?"], correct: "Quelle est cette rivière?" },
+        { type: 'fill', q: 'Вставьте пропущенное слово (узнавать/изучать)', speak: "Il est nécessaire d'apprendre à connaître la culture...", context: "Il est nécessaire d'apprendre à ___ la culture...", correct: "connaître" },
+        { type: 'test', q: 'Как переводится «L’Arc de Triomphe»?', speak: "L'Arc de Triomphe.", opts: ["Триумфальная арка", "Врата рая", "Арка спасения", "Площадь звёзд"], correct: "Триумфальная арка" },
+        { type: 'word_order', q: 'Соберите фразу: «Париж стоит на реке Сена»', speak: "Paris se trouve sur la rivière Seine.", words: ["Paris", "se", "trouve", "sur", "la", "rivière", "Seine."], correct: "Paris se trouve sur la rivière Seine." },
+        { type: 'fill', q: 'Вставьте пропущенное слово (покажем)', speak: "Nous vous montrons tout ce que vous voulez.", context: "Nous vous ___ tout ce que vous voulez.", correct: "montrons" },
+        { type: 'test', q: 'Что означает «une excursion»?', speak: "Une excursion.", opts: ["экскурсия", "прогулка пешком", "билет в музей", "карта города"], correct: "экскурсия" },
+        { type: 'listening', q: 'Прослушайте и выберите перевод', speak: "Paris se trouve sur la rivière Seine.", opts: ["Париж находится на реке Сена", "Париж стоит на холме", "Сена протекает через Лион", "Эйфелева башня у реки"], correct: "Париж находится на реке Сена" },
+        { type: 'listening_fill', q: 'Прослушайте и вставьте пропущенное слово', speak: "C'est à ravir!", context: "C'est à ___ !", correct: "ravir" }
+    ]},
+    6: { title: "Урок 6: Магазины и покупки", subtitle: "Magasins et achats", exercises: [
+        { type: 'test', q: 'Как переводится «Puis-je vous aider?»', speak: "Puis-je vous aider?", opts: ["Могу я Вам помочь?", "Сколько это стоит?", "Вам идёт", "Выберите цвет"], correct: "Могу я Вам помочь?" },
+        { type: 'word_order', q: 'Соберите фразу: «Я бы хотела купить эту помаду»', speak: "Je voudrais acheter ce rouge à lèvres.", words: ["Je", "voudrais", "acheter", "ce", "rouge", "à", "lèvres."], correct: "Je voudrais acheter ce rouge à lèvres." },
+        { type: 'fill', q: 'Вставьте пропущенное слово (предпочитаете)', speak: "Quelle couleur préférez-vous?", context: "Quelle couleur ___-vous?", correct: "préférez" },
+        { type: 'test', q: 'Что означает «Elle vous va beaucoup»?', speak: "Elle vous va beaucoup.", opts: ["Она Вам очень идёт", "Она очень длинная", "Она стоит дорого", "Она Вам не подходит"], correct: "Она Вам очень идёт" },
+        { type: 'word_order', q: 'Соберите фразу: «Сколько это стоит?»', speak: "Combien ça coûte?", words: ["Combien", "ça", "coûte?"], correct: "Combien ça coûte?" },
+        { type: 'fill', q: 'Вставьте пропущенное слово (покупка)', speak: "Merci pour l'achat.", context: "Merci pour l'___ .", correct: "achat" },
+        { type: 'test', q: 'Как переводится «Avoir l’air»?', speak: "Avoir l'air.", opts: ["выглядеть", "иметь воздух", "дышать", "быть в воздухе"], correct: "выглядеть" },
+        { type: 'word_order', q: 'Соберите фразу: «Я советую вам примерить это голубое платье»', speak: "Je vous conseille d'essayer cette robe bleue.", words: ["Je", "vous", "conseille", "d'essayer", "cette", "robe", "bleue."], correct: "Je vous conseille d'essayer cette robe bleue." },
+        { type: 'fill', q: 'Вставьте пропущенное слово (милый/приятный)', speak: "Elle a l'air très gentil.", context: "Elle a l'air très ___ .", correct: "gentil" },
+        { type: 'test', q: 'Что означает «Est-ce correct?» в магазине?', speak: "Est-ce correct?", opts: ["Верно?", "Это стильно?", "Есть ли размер?", "Можно ли вернуть?"], correct: "Верно?" },
+        { type: 'listening', q: 'Прослушайте и выберите перевод', speak: "Je voudrais acheter ce rouge à lèvres.", opts: ["Я бы хотела купить эту помаду", "Я ищу духи", "Покажите мне тушь", "Сколько стоит крем?"], correct: "Я бы хотела купить эту помаду" },
+        { type: 'listening_fill', q: 'Прослушайте и вставьте пропущенное слово', speak: "Merci pour l'achat.", context: "Merci pour l'___.", correct: "achat" }
+    ]},
+    7: { title: "Урок 7: Как пройти?", subtitle: "Comment aller…?", exercises: [
+        { type: 'test', q: 'Как переводится «Pourriez-vous me dire…?»', speak: "Pourriez-vous me dire…?", opts: ["Вы не подскажете…?", "Где вы живёте?", "Который час?", "Это далеко?"], correct: "Вы не подскажете…?" },
+        { type: 'word_order', q: 'Соберите фразу: «Извините, где ближайшая почта?»', speak: "Excusez-moi, où est la poste la plus proche?", words: ["Excusez-moi,", "où", "est", "la", "poste", "la", "plus", "proche?"], correct: "Excusez-moi, où est la poste la plus proche?" },
+        { type: 'fill', q: 'Вставьте пропущенное слово (прямо)', speak: "Allez tout droit.", context: "Allez tout ___", correct: "droit" },
+        { type: 'test', q: 'Что означает «Je crains que non»?', speak: "Je crains que non.", opts: ["Боюсь, что нет", "Я уверен в этом", "Пожалуйста, идите", "Это правильный путь"], correct: "Боюсь, что нет" },
+        { type: 'word_order', q: 'Соберите фразу: «Затем поверните направо»', speak: "Puis tournez à droite.", words: ["Puis", "tournez", "à", "droite."], correct: "Puis tournez à droite." },
+        { type: 'fill', q: 'Вставьте пропущенное слово (пожалуйста/прошу)', speak: "Je vous en prie.", context: "Je vous en ___ .", correct: "prie" },
+        { type: 'test', q: 'Как переводится «Un agent de police»?', speak: "Un agent de police.", opts: ["Полицейский", "Водитель такси", "Гид", "Продавец"], correct: "Полицейский" },
+        { type: 'word_order', q: 'Соберите фразу: «Спросите дорогу у полицейского»', speak: "Demandez le chemin à un agent.", words: ["Demandez", "le", "chemin", "à", "un", "agent."], correct: "Demandez le chemin à un agent." },
+        { type: 'fill', q: 'Вставьте пропущенное слово (извините)', speak: "Je suis désolé.", context: "Je suis ___ .", correct: "désolé" },
+        { type: 'test', q: 'Что означает «Pas de quoi !»', speak: "Pas de quoi !", opts: ["Не за что!", "Нет проблем!", "Извините!", "Спасибо!"], correct: "Не за что!" },
+        { type: 'listening', q: 'Прослушайте и выберите перевод', speak: "Excusez-moi, où est la poste la plus proche?", opts: ["Извините, где ближайшая почта?", "Как пройти в библиотеку?", "Где находится музей?", "Сколько идти до парка?"], correct: "Извините, где ближайшая почта?" },
+        { type: 'listening_fill', q: 'Прослушайте и вставьте пропущенное слово', speak: "Allez tout droit.", context: "Allez tout ___.", correct: "droit" }
+    ]},
+    8: { title: "Урок 8: Поездка за город", subtitle: "Une sortie à la campagne", exercises: [
+        { type: 'test', q: 'Как переводится «Enchanté(e) de faire votre connaissance»?', speak: "Enchanté de faire votre connaissance.", opts: ["Рад(а) познакомиться", "Очень приятно", "Добро пожаловать", "Хорошего дня"], correct: "Рад(а) познакомиться" },
+        { type: 'word_order', q: 'Соберите фразу: «Мы устроим замечательный пикник»', speak: "Nous allons organiser un admirable pique-nique.", words: ["Nous", "allons", "organiser", "un", "admirable", "pique-nique."], correct: "Nous allons organiser un admirable pique-nique." },
+        { type: 'fill', q: 'Вставьте пропущенное слово (жарко)', speak: "Il fait assez chaud.", context: "Il fait assez ___", correct: "chaud" },
+        { type: 'test', q: 'Что означает «Avec plaisir !»?', speak: "Avec plaisir !", opts: ["С удовольствием!", "С удовольствием есть", "Как жаль", "Пожалуйста"], correct: "С удовольствием!" },
+        { type: 'word_order', q: 'Соберите фразу: «Паула приготовила изумительные бутерброды»', speak: "Paula a préparé d'admirables sandwiches.", words: ["Paula", "a", "préparé", "d'admirables", "sandwiches."], correct: "Paula a préparé d'admirables sandwiches." },
+        { type: 'fill', q: 'Вставьте пропущенное слово (угощайтесь)', speak: "Régalez-vous.", context: "Régalez-___ .", correct: "vous" },
+        { type: 'test', q: 'Как переводится «Un temps pluvieux»?', speak: "Un temps pluvieux.", opts: ["Дождливая погода", "Солнечный день", "Сильный ветер", "Снег"], correct: "Дождливая погода" },
+        { type: 'word_order', q: 'Соберите фразу: «Какая погода в России?»', speak: "Quel temps fait-il en Russie ?", words: ["Quel", "temps", "fait-il", "en", "Russie", "?"], correct: "Quel temps fait-il en Russie ?" },
+        { type: 'fill', q: 'Вставьте пропущенное слово (плавать)', speak: "J'aime nager.", context: "J'aime ___ .", correct: "nager" },
+        { type: 'test', q: 'Что означает «Précisément !»', speak: "Précisément !", opts: ["Именно!", "Точно", "Правильно", "Согласен"], correct: "Именно!" },
+        { type: 'listening', q: 'Прослушайте и выберите перевод', speak: "Il fait assez chaud.", opts: ["Довольно жарко", "Сегодня прохладно", "Идёт дождь", "Солнечно и ветрено"], correct: "Довольно жарко" },
+        { type: 'listening_fill', q: 'Прослушайте и вставьте пропущенное слово', speak: "J'aime nager.", context: "J'aime ___.", correct: "nager" }
+    ]},
+    9: { title: "Урок 9: На вечеринке", subtitle: "À la soirée", exercises: [
+        { type: 'test', q: 'Как переводится «C’est l’honneur pour moi»?', speak: "C'est l'honneur pour moi.", opts: ["Я сочту это за честь", "Это моя гордость", "Это очень важно", "Я очень рад"], correct: "Я сочту это за честь" },
+        { type: 'word_order', q: 'Соберите фразу: «С нетерпением ждём Вас»', speak: "On vous attend avec impatience.", words: ["On", "vous", "attend", "avec", "impatience."], correct: "On vous attend avec impatience." },
+        { type: 'fill', q: 'Вставьте пропущенное слово (стол)', speak: "Mettons-nous à table.", context: "Mettons-nous à ___ .", correct: "table" },
+        { type: 'test', q: 'Что означает «C’est charmant !»?', speak: "C'est charmant !", opts: ["Какая прелесть!", "Это ужасно", "Как мило", "Очень красиво"], correct: "Какая прелесть!" },
+        { type: 'word_order', q: 'Соберите фразу: «Наша домработница приготовила замечательную индейку»', speak: "Notre femme de ménage a préparé une excellente dinde.", words: ["Notre", "femme", "de", "ménage", "a", "préparé", "une", "excellente", "dinde."], correct: "Notre femme de ménage a préparé une excellente dinde." },
+        { type: 'fill', q: 'Вставьте пропущенное слово (талант)', speak: "Vous avez du talent.", context: "Vous avez du ___ .", correct: "talent" },
+        { type: 'test', q: 'Как переводится «Faire plaisir»?', speak: "Faire plaisir.", opts: ["Доставлять удовольствие", "Делать подарки", "Работать вместе", "Готовить ужин"], correct: "Доставлять удовольствие" },
+        { type: 'word_order', q: 'Соберите фразу: «Мы тоже получили большое удовольствие»', speak: "Ça a fait un grand plaisir à nous aussi.", words: ["Ça", "a", "fait", "un", "grand", "plaisir", "à", "nous", "aussi."], correct: "Ça a fait un grand plaisir à nous aussi." },
+        { type: 'fill', q: 'Вставьте пропущенное слово (водитель)', speak: "Je dirai au chauffeur de vous conduire à l'hôtel.", context: "Je dirai au ___ de vous conduire...", correct: "chauffeur" },
+        { type: 'test', q: 'Что означает «Un souvenir»', speak: "Un souvenir.", opts: ["Сувенир", "Воспоминание", "Память", "Подарок"], correct: "Сувенир" },
+        { type: 'listening', q: 'Прослушайте и выберите перевод', speak: "Mettons-nous à table.", opts: ["Сядем за стол", "Пойдёмте гулять", "Начнём ужин", "Приятного аппетита"], correct: "Сядем за стол" },
+        { type: 'listening_fill', q: 'Прослушайте и вставьте пропущенное слово', speak: "C'est l'honneur pour moi.", context: "C'est l'___ pour moi.", correct: "honneur" }
+    ]},
+    10: { title: "Урок 10: Отъезд", subtitle: "Le départ", exercises: [
+        { type: 'test', q: 'Как переводится «Je pars ce soir»?', speak: "Je pars ce soir.", opts: ["Я уезжаю сегодня вечером", "Я приеду сегодня ночью", "Я остаюсь до вечера", "Я звоню вечером"], correct: "Я уезжаю сегодня вечером" },
+        { type: 'word_order', q: 'Соберите фразу: «Звоню, чтобы попрощаться с Вами»', speak: "J'appelle pour vous faire mes adieux.", words: ["J'appelle", "pour", "vous", "faire", "mes", "adieux."], correct: "J'appelle pour vous faire mes adieux." },
+        { type: 'fill', q: 'Вставьте пропущенное слово (проблема)', speak: "Ça ne pose aucun problème.", context: "Ça ne pose aucun ___ .", correct: "problème" },
+        { type: 'test', q: 'Что означает «Aussitôt arrivée en Russie…»?', speak: "Aussitôt arrivée en Russie…", opts: ["Как только приеду в Россию…", "Сразу после вылета…", "Когда вернусь домой…", "До отправления самолёта…"], correct: "Как только приеду в Россию…" },
+        { type: 'word_order', q: 'Соберите фразу: «У нас будет возможность ещё раз увидеться»', speak: "Nous aurons la possibilité de vous voir encore une fois.", words: ["Nous", "aurons", "la", "possibilité", "de", "vous", "voir", "encore", "une", "fois."], correct: "Nous aurons la possibilité de vous voir encore une fois." },
+        { type: 'fill', q: 'Вставьте пропущенное слово (заранее/вперед)', speak: "Il faut arriver à l'aéroport d'avance.", context: "Il faut arriver à l'aéroport d'___ .", correct: "avance" },
+        { type: 'test', q: 'Как переводится «Pour rien» в ответ на спасибо?', speak: "Pour rien.", opts: ["Не за что", "За ничто", "Ничего", "Без проблем"], correct: "Не за что" },
+        { type: 'word_order', q: 'Соберите фразу: «Напишу Вам письмо»', speak: "Je vous écris une lettre.", words: ["Je", "vous", "écris", "une", "lettre."], correct: "Je vous écris une lettre." },
+        { type: 'fill', q: 'Вставьте пропущенное слово (сторона/часть)', speak: "C'est très gentil de votre part.", context: "C'est très gentil de votre ___ .", correct: "part" },
+        { type: 'test', q: 'Что означает глагол «accompagner»?', speak: "Accompagner.", opts: ["Провожать", "Сопровождать машину", "Звонить", "Встречать"], correct: "Провожать" },
+        { type: 'listening', q: 'Прослушайте и выберите правильный перевод', speak: "Je suis désolé, je ne comprends pas.", opts: ["Извините, я не понимаю", "Я очень рад вас видеть", "Где находится отель?", "Сколько это стоит?"], correct: "Извините, я не понимаю" },
+        { type: 'listening_fill', q: 'Прослушайте и вставьте пропущенное слово', speak: "Je voudrais réserver une chambre.", context: "Je voudrais ___ une chambre.", correct: "réserver" }
+    ]}
+};
+
+const app = {
+    current: 1, idx: 0, pts: 0, tries: 0,
+    sel: null, orderArr: [], txtInput: "", speakText: "",
+    completedLessons: {},
+    audioTimer: null,
+
+    el: {
+        nav: document.getElementById('lesson-nav'), title: document.getElementById('app-title'), sub: document.getElementById('app-subtitle'),
+        type: document.getElementById('task-type-label'), q: document.getElementById('task-q'), box: document.getElementById('task-interact'),
+        fb: document.getElementById('fb-msg'), chk: document.getElementById('check-btn'), nxt: document.getElementById('next-btn'), prv: document.getElementById('prev-btn'),
+        bar: document.getElementById('prog-bar'), ptxt: document.getElementById('prog-txt'),
+        game: document.getElementById('game-view'), res: document.getElementById('res-view'), score: document.getElementById('res-score'), rtxt: document.getElementById('res-text')
+    },
+
+    init() {
+        this.loadProgress();
+        Object.keys(LESSONS).sort((a,b) => a - b).forEach(k => {
+            const btn = document.createElement('button');
+            btn.className = 'nav-btn'; btn.textContent = k; btn.dataset.l = k;
+            btn.onclick = () => this.switchLesson(parseInt(k));
+            this.el.nav.appendChild(btn);
+        });
+        this.switchLesson(this.current, true);
+        this.updateLessonButtonsState();
+    },
+
+    saveProgress() {
+        const progress = {
+            lesson: this.current,
+            exercise: this.idx,
+            points: this.pts,
+            completedLessons: this.completedLessons
+        };
+        localStorage.setItem('fr_progress', JSON.stringify(progress));
+    },
+
+    loadProgress() {
+        const saved = localStorage.getItem('fr_progress');
+        if (saved) {
+            const data = JSON.parse(saved);
+            this.current = data.lesson || 1;
+            this.idx = data.exercise || 0;
+            this.pts = data.points || 0;
+            this.completedLessons = data.completedLessons || {};
+        }
+    },
+
+    clearProgress() {
+        localStorage.removeItem('fr_progress');
+        this.current = 1; this.idx = 0; this.pts = 0; this.tries = 0;
+        this.completedLessons = {};
+        this.updateLessonButtonsState();
+        this.switchLesson(1);
+    },
+
+    updateLessonButtonsState() {
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            const lessonNum = parseInt(btn.dataset.l);
+            btn.classList.toggle('completed', !!this.completedLessons[lessonNum]);
+        });
+    },
+
+    speak() {
+        if (!this.speakText) return;
+        if (!('speechSynthesis' in window)) {
+            alert('Ваш браузер не поддерживает синтез речи.');
+            return;
+        }
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(this.speakText);
+        u.lang = 'fr-FR'; u.rate = 0.85; u.pitch = 1;
+        window.speechSynthesis.speak(u);
+    },
+
+    switchLesson(num, preserveProgress = false) {
+        if (!LESSONS[num]) return;
+        this.current = num;
+        if (!preserveProgress) {
+            this.idx = 0; this.pts = 0; this.tries = 0;
+        }
+        this.el.game.style.display = 'block'; this.el.res.style.display = 'none';
+        this.el.title.textContent = LESSONS[num].title;
+        this.el.sub.textContent = LESSONS[num].subtitle;
+        document.querySelectorAll('.nav-btn').forEach(b => {
+            b.classList.toggle('active', parseInt(b.dataset.l) === num);
+        });
+        this.render();
+        this.saveProgress();
+    },
+
+    render() {
+        if (this.audioTimer) clearTimeout(this.audioTimer);
+        const ex = LESSONS[this.current].exercises[this.idx];
+        this.el.type.textContent = ex.type === 'test' || ex.type === 'listening' ? 'Выбор перевода' : 
+            ex.type === 'word_order' ? 'Порядок слов' : (ex.type === 'listening_fill' ? 'Аудирование: вставьте слово' : 'Вставьте слово');
+        this.el.q.textContent = ex.q;
+        this.speakText = ex.speak || "";
+        this.el.box.innerHTML = '';
+        this.el.fb.className = 'feedback-msg'; this.el.fb.style.display = 'none';
+        this.el.chk.style.display = 'inline-block'; this.el.nxt.style.display = 'none';
+        this.el.prv.disabled = this.idx === 0;
+        this.el.bar.style.width = `${(this.idx / LESSONS[this.current].exercises.length) * 100}%`;
+        this.el.ptxt.textContent = `${this.idx + 1} / ${LESSONS[this.current].exercises.length}`;
+        this.sel = null; this.orderArr = []; this.txtInput = "";
+
+        if (ex.type === 'test' || ex.type === 'listening') {
+            const grid = document.createElement('div'); grid.className = 'opt-grid';
+            ex.opts.forEach(opt => {
+                const b = document.createElement('div'); b.className = 'opt-btn'; b.textContent = opt;
+                b.onclick = () => this.pickOpt(b, opt); grid.appendChild(b);
+            });
+            this.el.box.appendChild(grid);
+            if (ex.type === 'listening') this.audioTimer = setTimeout(() => this.speak(), 300);
+        } else if (ex.type === 'word_order') {
+            const ans = document.createElement('div'); ans.className = 'word-area empty'; ans.id = 'ans-zone';
+            const pool = document.createElement('div'); pool.className = 'word-pool';
+            [...ex.words].sort(() => Math.random() - 0.5).forEach(w => {
+                const t = document.createElement('span'); t.className = 'word-tile';
+                t.textContent = w.replace(/[.,!?;:()]/g, ''); t.dataset.raw = w;
+                t.onclick = () => this.moveWord(t); pool.appendChild(t);
+            });
+            this.el.box.append(ans, pool);
+        } else {
+            const inp = document.createElement('input'); inp.type = 'text'; inp.className = 'fill-field';
+            inp.placeholder = ex.type === 'listening_fill' ? 'Прослушайте и введите слово...' : 'Введите слово на французском...';
+            inp.oninput = e => this.txtInput = e.target.value.trim();
+            this.el.box.innerHTML = `<div class="context-line">${ex.context.replace('___', '<u>...</u>')}</div>`;
+            this.el.box.appendChild(inp);
+            if (ex.type === 'listening_fill') this.audioTimer = setTimeout(() => this.speak(), 300);
+        }
+        this.saveProgress();
+    },
+
+    pickOpt(btn, val) {
+        if (document.querySelector('.locked')) return;
+        document.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        this.sel = val;
+    },
+    moveWord(tile) {
+        const zone = document.getElementById('ans-zone'), pool = document.querySelector('.word-pool');
+        if (tile.parentNode === pool) {
+            this.orderArr.push(tile.dataset.raw); tile.classList.add('placed');
+            const c = document.createElement('span'); c.className = 'word-tile';
+            c.textContent = tile.dataset.raw.replace(/[.,!?;:()]/g, '');
+            c.dataset.raw = tile.dataset.raw;
+            c.onclick = () => this.returnWord(c);
+            zone.appendChild(c);
+            zone.classList.remove('empty');
+        }
+    },
+    returnWord(clone) {
+        const zone = document.getElementById('ans-zone');
+        this.orderArr = this.orderArr.filter(w => w !== clone.dataset.raw);
+        clone.remove();
+        document.querySelectorAll('.word-pool .word-tile').forEach(t => {
+            if (t.dataset.raw === clone.dataset.raw && t.classList.contains('placed'))
+                t.classList.remove('placed');
+        });
+        if (zone.children.length === 0) zone.classList.add('empty');
+    },
+
+    validate() {
+        const ex = LESSONS[this.current].exercises[this.idx];
+        let ok = false;
+        const clean = s => s.toLowerCase().replace(/[.,!?;:()]/g, '').replace(/\s+/g, ' ').trim();
+
+        if (ex.type === 'test' || ex.type === 'listening') {
+            if (!this.sel) return alert('Выберите вариант');
+            ok = this.sel === ex.correct;
+            document.querySelectorAll('.opt-btn').forEach(b => {
+                b.classList.add('locked');
+                if (b.textContent === ex.correct) b.classList.add('correct');
+                else if (b.classList.contains('selected')) b.classList.add('incorrect');
+            });
+        } else if (ex.type === 'word_order') {
+            if (this.orderArr.length === 0) return alert('Соберите фразу');
+            ok = clean(this.orderArr.join(' ')) === clean(ex.correct);
+        } else {
+            if (!this.txtInput) return alert('Введите слово');
+            const i = document.querySelector('.fill-field');
+            i.disabled = true;
+            i.classList.add('locked');
+            ok = this.txtInput.toLowerCase() === ex.correct.toLowerCase();
+            i.classList.add(ok ? 'is-correct' : 'is-wrong');
+        }
+
+        if (ok && this.tries === 0) this.pts++;
+        this.tries++;
+        this.el.fb.style.display = 'block';
+        this.el.fb.className = `feedback-msg ${ok ? 'success' : 'error'}`;
+        this.el.fb.innerHTML = ok ? `<strong>✨ Parfait !</strong> Ответ верный.` : `<strong>⚠️ Внимание!</strong> Правильный вариант: <em>${ex.correct}</em>`;
+        this.el.chk.style.display = 'none';
+        this.el.nxt.style.display = 'inline-block';
+        this.saveProgress();
+    },
+
+    goNext() {
+        this.idx++;
+        if (this.idx < LESSONS[this.current].exercises.length) {
+            this.tries = 0;
+            this.render();
+        } else {
+            this.completedLessons[this.current] = true;
+            this.updateLessonButtonsState();
+            this.el.game.style.display = 'none';
+            this.el.res.style.display = 'block';
+            this.el.score.textContent = `${this.pts}/${LESSONS[this.current].exercises.length}`;
+            this.el.rtxt.textContent = `Вы завершили «${LESSONS[this.current].title}»`;
+            this.saveProgress();
+        }
+    },
+    goPrev() {
+        if (this.idx > 0) {
+            this.idx--;
+            this.tries = 0;
+            this.render();
+        }
+    },
+    resetCurrent() {
+        this.idx = 0; this.pts = 0; this.tries = 0;
+        this.el.game.style.display = 'block';
+        this.el.res.style.display = 'none';
+        this.render();
+        this.saveProgress();
+    }
+};
+
+app.init();
+</script>
+</body>
+</html>
