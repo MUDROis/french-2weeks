@@ -2,7 +2,6 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; font-src https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline'; img-src 'self' data:;">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pratique du Français | Полный курс (10 уроков)</title>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -114,19 +113,19 @@
         <span class="task-label" id="task-type-label">Загрузка...</span>
         <div class="q-row">
             <div class="task-question" id="task-q"></div>
-            <button class="speak-btn" id="speak-btn" title="Прослушать фразу">
+            <button class="speak-btn" id="speak-btn" title="Прослушать фразу" onclick="app.speak()">
                 <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
             </button>
         </div>
         <div id="task-interact"></div>
         <div class="feedback-msg" id="fb-msg"></div>
         <div class="ctrl-row">
-            <button class="btn btn-sec" id="prev-btn" disabled>← Назад</button>
-            <button class="btn btn-pri" id="check-btn">Проверить</button>
-            <button class="btn btn-pri" id="next-btn" style="display:none;">Далее →</button>
+            <button class="btn btn-sec" id="prev-btn" onclick="app.goPrev()" disabled>← Назад</button>
+            <button class="btn btn-pri" id="check-btn" onclick="app.validate()">Проверить</button>
+            <button class="btn btn-pri" id="next-btn" onclick="app.goNext()" style="display:none;">Далее →</button>
         </div>
         <div class="progress-controls">
-            <button class="btn btn-sec btn-sm" id="clear-progress-btn">🗑️ Сбросить прогресс</button>
+            <button class="btn btn-sec btn-sm" onclick="app.clearProgress()">🗑️ Сбросить прогресс</button>
         </div>
     </main>
 
@@ -134,7 +133,7 @@
         <h2>Bravo ! 🇫🇷✨</h2>
         <p id="res-text">Вы завершили практику.</p>
         <div class="score-ring" id="res-score">0/0</div>
-        <button class="btn btn-pri" id="reset-current-btn">Пройти заново</button>
+        <button class="btn btn-pri" onclick="app.resetCurrent()">Пройти заново</button>
     </div>
 </div>
 
@@ -320,24 +319,13 @@ const app = {
     },
 
     loadProgress() {
-        try {
-            const saved = localStorage.getItem('fr_progress');
-            if (!saved) return;
-            
+        const saved = localStorage.getItem('fr_progress');
+        if (saved) {
             const data = JSON.parse(saved);
-            
-            // Валидация структуры данных
-            if (typeof data !== 'object' || data === null) {
-                throw new Error('Неверный формат данных');
-            }
-            
-            this.current = (typeof data.lesson === 'number' && LESSONS[data.lesson]) ? data.lesson : 1;
-            this.idx = (typeof data.exercise === 'number') ? data.exercise : 0;
-            this.pts = (typeof data.points === 'number') ? data.points : 0;
-            this.completedLessons = (typeof data.completedLessons === 'object' && data.completedLessons !== null) ? data.completedLessons : {};
-        } catch (e) {
-            console.error('Ошибка загрузки прогресса:', e);
-            localStorage.removeItem('fr_progress');
+            this.current = data.lesson || 1;
+            this.idx = data.exercise || 0;
+            this.pts = data.points || 0;
+            this.completedLessons = data.completedLessons || {};
         }
     },
 
@@ -522,18 +510,7 @@ const app = {
     }
 };
 
-// Инициализация обработчиков событий после загрузки DOM
-document.addEventListener('DOMContentLoaded', () => {
-    app.init();
-    
-    // Навешиваем обработчики на кнопки вместо onclick в HTML
-    document.getElementById('speak-btn')?.addEventListener('click', () => app.speak());
-    document.getElementById('prev-btn')?.addEventListener('click', () => app.goPrev());
-    document.getElementById('check-btn')?.addEventListener('click', () => app.validate());
-    document.getElementById('next-btn')?.addEventListener('click', () => app.goNext());
-    document.getElementById('clear-progress-btn')?.addEventListener('click', () => app.clearProgress());
-    document.getElementById('reset-current-btn')?.addEventListener('click', () => app.resetCurrent());
-});
+app.init();
 </script>
 </body>
 </html>
